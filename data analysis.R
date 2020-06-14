@@ -4,7 +4,6 @@
 #
 
 # importing libraries
-# still need to check if I use all of these
 library(psych)
 library(ggpubr)
 library(tidyverse)
@@ -12,12 +11,13 @@ library(rethinking)
 library(brms)
 
 # importing data
-df.raw <- read.csv("/Users/zach.himmelberger/OneDrive - Maryville College/Research/Mirror Study/Public Repo/Raw Data.csv")
+url.file <- "https://raw.githubusercontent.com/ZacharyHimmelberger/I-can-see-myself-helping/master/Raw%20Data.csv"
+df.raw <- read.csv(url.file)
 
 # separating condition into two columns 
 # helps with 'readability' but is not strictly necessary
-df <- df.raw %>% mutate(experimental = ifelse(df$condition == "E", 1, 0),
-                    control = ifelse(df$condition == "C", 1, 0))
+df <- df.raw %>% mutate(experimental = ifelse(df.raw$condition == "E", 1, 0),
+                        control = ifelse(df.raw$condition == "C", 1, 0))
 
 # descriptive statistics for age
 psych::describe(df$age)
@@ -28,7 +28,7 @@ table(df$gender)
 # Main Analysis
 
 # visualizing priors
-sample.priors <- brm(data = data, family = gaussian,
+sample.priors <- brm(data = df, family = gaussian,
                      ciphers ~ 0 + experimental + control,
                      prior = c(prior(normal(10, 5), lb = 0, ub = 20, class = b),
                                prior(cauchy(0, 2.5), class = sigma)),
@@ -52,12 +52,12 @@ ggplot(data=df.priors.only, aes(x=sigma)) +
   scale_x_continuous(limits=c(0,20))
 
 # building a model with weakly informative priors
-model.priors <- brm(data = data, family = gaussian,
-    ciphers ~ 0 + experimental + control,
-    prior = c(prior(normal(10, 5), lb = 0, ub = 20, class = b),
-              prior(cauchy(0, 2.5), class = sigma)),
-    iter = 10000, warmup = 2000, chains = 4,
-    seed = 19)
+model.priors <- brm(data = df, family = gaussian,
+                    ciphers ~ 0 + experimental + control,
+                    prior = c(prior(normal(10, 5), lb = 0, ub = 20, class = b),
+                              prior(cauchy(0, 2.5), class = sigma)),
+                    iter = 10000, warmup = 2000, chains = 4,
+                    seed = 19)
 
 # summarizing the model
 summary(model.priors)
@@ -115,7 +115,7 @@ prior2posterior.2 <- ggplot(data=df.plot.prior2posterior) +
   theme(axis.title.x=element_blank())
 
 figure <- ggpubr::ggarrange(prior2posterior.1, prior2posterior.2, 
-                   ncol = 1, nrow = 2)
+                            ncol = 1, nrow = 2)
 
 annotate_figure(figure,
                 bottom = text_grob("Ciphers completed", color = "black",
@@ -145,14 +145,14 @@ annotate_figure(prior2posterior.3,
 #
 
 # building a model with uninformative priors
-model.uninformative.priors <- brm(ciphers ~ 0 + experimental + control, data=data, 
-             iter = 10000, warmup = 2000, 
-             chains = 4, seed = 19)
+model.uninformative.priors <- brm(ciphers ~ 0 + experimental + control, data=df, 
+                                  iter = 10000, warmup = 2000, 
+                                  chains = 4, seed = 19)
 summary(model.uninformative.priors)
 
 # building a model that does not assume equal variances
 uneq_var.model <- brm(ciphers ~ condition, sigma ~ condition, 
-                      data=data,
+                      data=df,
                       iter = 46000, 
                       warmup = 45000, 
                       chains = 4,
@@ -162,9 +162,3 @@ summary(uneq_var.model)
 # independent samples t-test and cohen's d effect size
 t.test(ciphers ~ condition, data=df, var.equal=TRUE, alternative="less")
 effsize::cohen.d(ciphers ~ condition, data=df)
-
-
-
-
-
-
