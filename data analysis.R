@@ -5,9 +5,9 @@
 
 # importing libraries
 library(psych)
+library(effsize)
 library(ggpubr)
 library(tidyverse)
-library(rethinking)
 library(brms)
 
 # importing data
@@ -159,6 +159,6 @@ uneq_var.model <- brm(ciphers ~ condition, sigma ~ condition,
                       seed = 4)
 summary(uneq_var.model)
 
-# independent samples t-test and cohen's d effect size
+# independent samples t-test and Cohen's d effect size
 t.test(ciphers ~ condition, data=df, var.equal=TRUE, alternative="less")
-effsize::cohen.d(ciphers ~ condition, data=df)
+effsizecohen.d(ciphers ~ condition, data=df)
